@@ -91,3 +91,68 @@ bitbake rpi-basic
 ```sh
 bitbake rpi-basic -c do_populate_sdk
 ```
+
+## Using Pre-Build Images
+
+1. Extract the 7zip archive.
+
+```bash
+7z x rpi-basic-raspberrypi3.rpi-sdimg.7z
+```
+
+2. Copy the image to the SD Card. Immediately after inserting the SD Card, discover your devices name viewing hte dmesg log.
+
+```bash
+dmesg | tail
+```
+
+In my case this was `sdc` as seen below.
+
+```
+[177703.081102] sd 2:0:0:0: [sdc] 60579840 512-byte logical blocks: (31.0 GB/28.9 GiB)
+[177703.081967] sd 2:0:0:0: [sdc] Write Protect is off
+[177703.081972] sd 2:0:0:0: [sdc] Mode Sense: 03 00 00 00
+[177703.082854] sd 2:0:0:0: [sdc] No Caching mode page found
+[177703.082863] sd 2:0:0:0: [sdc] Assuming drive cache: write through
+[177703.088180]  sdc: sdc1 sdc2
+[177703.091663] sd 2:0:0:0: [sdc] Attached SCSI removable disk
+[177703.537707] EXT4-fs (sdc2): mounting ext3 file system using the ext4 subsystem
+[177703.812323] EXT4-fs (sdc2): recovery complete
+[177703.816525] EXT4-fs (sdc2): mounted filesystem with ordered data mode. Opts: (null)
+```
+
+```
+dd if=rpi-basic-raspberrypi3-20190828023638.rootfs.rpi-sdimg of=/dev/sdx bs=4M
+sync
+```
+
+3. Extend the Root Partition of the SD Card Image to match your SD card image size.
+
+```bash
+growpart /dev/sdc 2
+resize2fs /dev/sdc2
+```
+
+# Using a Built Image
+
+Once you have built your SD card image, you need to burn it to that SD card.
+
+1. Find your SD card. If you have just plugged it in, the easiest way is to view the logs.
+
+```bash
+dmesg | tail
+```
+
+or view the different disks on your system.
+
+```bash
+fdisk -l
+```
+
+2. Use dd (disk destroyer) to copy your image over. I am assuming you have your project in the default location. Replace `/dev/sdx` with the appropriate disk. Ex `/dev/sdb`.
+
+```
+cd ~/Documents/poky/build
+dd if=tmp/deploy/images/raspberrypi3/rpi-basic-raspberrypi3.rpi-sdimage of=/dev/sdx bs=4M
+sync
+```
